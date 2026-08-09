@@ -3,127 +3,257 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Smart Factory SCADA Monitor</title>
+    <meta name="description" content="MCP Tool 실행과 RAG 근거를 추적하는 Smart Factory AI Agent Dashboard">
+    <title>Smart Factory AI Agent</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
   </head>
   <body>
-    <main class="layout">
-      <header>
-        <p class="eyebrow">SMART FACTORY · HISTORICAL SCADA</p>
-        <h1>센서 이상 상태 모니터</h1>
-        <p id="as-of" class="subtitle">데이터를 불러오는 중입니다.</p>
-      </header>
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
 
-      <section id="summary" class="summary" aria-label="상태 요약"></section>
-
-      <section class="panel">
-        <div class="panel-heading">
-          <div>
-            <p class="eyebrow">MONITORED SENSORS</p>
-            <h2>마지막 저장 상태</h2>
-          </div>
-          <button id="refresh" type="button">새로고침</button>
+    <header class="topbar">
+      <div class="brand-block">
+        <span class="brand-mark" aria-hidden="true">SF</span>
+        <div>
+          <p class="eyebrow">OBSERVABLE · READ-ONLY · BOUNDED</p>
+          <h1>Smart Factory <span>AI Agent</span></h1>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>센서</th>
-                <th>단위</th>
-                <th>상태</th>
-                <th>Risk Score</th>
-                <th>마지막 Window</th>
-              </tr>
-            </thead>
-            <tbody id="sensor-rows"></tbody>
-          </table>
+      </div>
+      <div class="header-actions">
+        <span id="mcp-header-status" class="system-badge pending" role="status">
+          <span class="status-dot" aria-hidden="true"></span>MCP 확인 중
+        </span>
+        <span class="historical-badge">Historical Dataset · 2019</span>
+        <button class="button ghost" type="button" data-open-modal="architecture-modal">
+          Architecture
+        </button>
+      </div>
+    </header>
+
+    <main class="page-shell">
+      <section class="hero" aria-labelledby="dashboard-title">
+        <div>
+          <p class="eyebrow">PART 5 · LANGGRAPH TOOL-CALLING</p>
+          <h2 id="dashboard-title">센서 데이터에서 근거 있는 점검 답변까지</h2>
+          <p class="hero-copy">
+            Agent가 선택한 MCP·RAG·Web Tool과 실행 결과를 숨김없이 추적합니다.
+            모든 센서 시각은 2019년 데이터셋의 마지막 저장 시점을 기준으로 합니다.
+          </p>
+        </div>
+        <div class="hero-meta">
+          <span>Gemini</span><span>LangGraph</span><span>MCP stdio</span><span>ChromaDB</span>
         </div>
       </section>
 
-      <section class="panel ask-panel">
-        <div class="panel-heading">
-          <div>
-            <p class="eyebrow">PART 4 · RAG + LANGGRAPH</p>
-            <h2>센서와 점검 지식 질문</h2>
-          </div>
-        </div>
-        <form id="ask-form">
-          <label for="question">질문</label>
-          <div class="ask-row">
-            <input id="question" name="question" value="센서 92 상태와 점검 방법을 알려줘" maxlength="1000">
-            <button type="submit">질문하기</button>
-          </div>
-        </form>
-        <pre id="answer" class="answer">질문을 입력하면 TimescaleDB 상태와 Vector DB 점검 문서를 함께 조회합니다.</pre>
+      <section id="summary-cards" class="summary-grid" aria-label="공장 상태 집계">
+        <article class="summary-card skeleton-card"><span>데이터 로딩</span><strong>—</strong></article>
       </section>
 
-      <p class="notice">이 화면은 실시간 공장 상태가 아니라 2019년 공개 데이터셋의 마지막 기록을 보여줍니다.</p>
+      <div id="dashboard-error" class="alert error hidden" role="alert"></div>
+
+      <section class="operations-grid" aria-label="센서 대시보드">
+        <article class="panel factory-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">FACTORY STATUS</p>
+              <h3>마지막 저장 상태</h3>
+              <p id="factory-as-of" class="panel-caption">Historical data를 불러오는 중입니다.</p>
+            </div>
+            <button id="refresh-dashboard" class="icon-button" type="button" aria-label="센서 대시보드 새로고침">↻</button>
+          </div>
+          <div id="sensor-cards" class="sensor-list" aria-live="polite">
+            <p class="empty-state">센서 목록을 불러오는 중입니다.</p>
+          </div>
+        </article>
+
+        <article class="panel detail-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">SENSOR DETAIL</p>
+              <h3 id="detail-title">센서를 선택하세요</h3>
+            </div>
+            <span id="detail-status" class="status-pill neutral">NO SELECTION</span>
+          </div>
+          <div id="sensor-detail" class="detail-content">
+            <div class="empty-state tall">
+              <span class="empty-icon" aria-hidden="true">⌁</span>
+              센서 카드를 선택하면 저장 상태와 Feature가 표시됩니다.
+            </div>
+          </div>
+        </article>
+
+        <article class="panel chart-panel">
+          <div class="panel-heading chart-heading">
+            <div>
+              <p class="eyebrow">HISTORICAL TREND</p>
+              <h3 id="chart-title">Sensor history</h3>
+              <p id="chart-caption" class="panel-caption">마지막 저장 시점 이전 구간</p>
+            </div>
+            <div class="chart-controls">
+              <label for="metric-select">Metric</label>
+              <select id="metric-select" aria-label="차트 지표 선택">
+                <option value="risk_score">Risk Score</option>
+                <option value="rms">RMS</option>
+                <option value="peak_to_peak">Peak-to-Peak</option>
+              </select>
+              <div class="range-group" role="group" aria-label="조회 시간 범위">
+                <button type="button" data-hours="6">6h</button>
+                <button type="button" data-hours="12">12h</button>
+                <button type="button" data-hours="24" class="active">24h</button>
+              </div>
+            </div>
+          </div>
+          <div id="history-chart" class="chart-stage" role="img" aria-label="선택 센서의 historical Risk Score 차트">
+            <p class="empty-state">센서를 선택하면 최대 200개 historical window를 표시합니다.</p>
+          </div>
+          <div class="chart-legend">
+            <span><i class="legend-line" aria-hidden="true"></i><b id="legend-metric">Risk Score</b></span>
+            <span>마지막 저장 timestamp 기준 상대 범위</span>
+          </div>
+        </article>
+      </section>
+
+      <section class="agent-grid" aria-label="AI Agent 질의와 실행 추적">
+        <article class="panel chat-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">AI AGENT</p>
+              <h3>근거 기반 질의</h3>
+            </div>
+            <span id="web-indicator" class="web-indicator off">WEB SEARCH OFF</span>
+          </div>
+
+          <div class="prompt-list" aria-label="추천 질문">
+            <button type="button" data-prompt="센서 92 상태 알려줘">센서 92 상태</button>
+            <button type="button" data-prompt="센서 92가 왜 이상한지 분석해줘">이상 원인 분석</button>
+            <button type="button" data-prompt="진동 상승 시 무엇을 점검해야 해?">진동 점검 방법</button>
+            <button type="button" data-prompt="이상 상태인 센서가 어떤 게 있어?">이상 센서 목록</button>
+            <button type="button" data-prompt="웹 검색으로 진동 이상 관련 최신 점검 자료를 찾아줘">최신 외부 자료</button>
+          </div>
+
+          <form id="ask-form" class="ask-form">
+            <label for="question">센서 상태, 이상 추세 또는 점검 방법을 질문하세요.</label>
+            <div class="ask-row">
+              <textarea id="question" name="question" maxlength="1000" rows="3" placeholder="예: 센서 92가 왜 이상한지 분석해줘" required></textarea>
+              <button id="ask-submit" class="button primary" type="submit">Agent 실행</button>
+            </div>
+          </form>
+
+          <div id="agent-loading" class="agent-loading hidden" role="status">
+            <span class="loader" aria-hidden="true"></span>
+            Agent가 사용 가능한 Tool을 조회하고 있습니다.
+          </div>
+          <div id="chat-error" class="alert error hidden" role="alert"></div>
+
+          <div id="agent-response" class="response-card empty-response">
+            <div class="response-role">AI Agent</div>
+            <p>질문을 실행하면 답변과 사용한 Tool·근거가 여기에 표시됩니다.</p>
+          </div>
+        </article>
+
+        <article id="execution-panel" class="panel execution-panel" tabindex="-1">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">AGENT EXECUTION</p>
+              <h3>Tool trace</h3>
+            </div>
+            <div class="trace-legend" aria-label="Tool 종류 범례">
+              <span class="tool-badge mcp">MCP</span>
+              <span class="tool-badge rag">RAG</span>
+              <span class="tool-badge web">WEB</span>
+              <span class="tool-badge llm">LLM</span>
+            </div>
+          </div>
+          <ol id="tool-trace" class="trace-list">
+            <li class="empty-state">Agent를 실행하면 Tool 이름, 인자, 상태와 결과 요약이 순서대로 표시됩니다.</li>
+          </ol>
+        </article>
+      </section>
+
+      <section class="evidence-grid" aria-label="답변 근거와 MCP 시스템">
+        <article class="panel sources-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">SOURCES / EVIDENCE</p>
+              <h3>답변 근거</h3>
+            </div>
+            <button id="raw-response-button" class="button ghost small" type="button" disabled>Raw response</button>
+          </div>
+          <div id="source-list" class="source-list">
+            <p class="empty-state">아직 사용된 로컬 문서나 외부 자료가 없습니다.</p>
+          </div>
+        </article>
+
+        <article class="panel mcp-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="eyebrow">SYSTEM INTERFACE</p>
+              <h3>MCP Runtime</h3>
+            </div>
+            <span id="mcp-panel-status" class="status-pill neutral">CHECKING</span>
+          </div>
+          <dl id="mcp-metadata" class="metadata-list">
+            <div><dt>Transport</dt><dd>stdio</dd></div>
+            <div><dt>Server</dt><dd>smart-factory-scada</dd></div>
+            <div><dt>Mode</dt><dd>read-only</dd></div>
+            <div><dt>Database</dt><dd>TimescaleDB / PostgreSQL</dd></div>
+          </dl>
+          <details class="tool-catalog">
+            <summary>Available MCP Tools <span id="mcp-tool-count">—</span></summary>
+            <ul id="mcp-tool-list"><li>Tool 목록 확인 중</li></ul>
+          </details>
+        </article>
+      </section>
+
+      <footer class="demo-notice">
+        <strong>Demo Notice</strong>
+        <ul>
+          <li>본 시스템은 2019년 historical sensor dataset의 저장값을 사용합니다.</li>
+          <li>Risk Score는 비지도 anomaly model의 이상 후보 점수이며 고장 확률이 아닙니다.</li>
+          <li>점검 문서는 제조사 매뉴얼을 대체하지 않습니다.</li>
+          <li>설비 작업은 현장 안전 규정과 제조사 매뉴얼을 우선해야 합니다.</li>
+        </ul>
+      </footer>
     </main>
 
-    <script>
-      const statusOrder = ["NORMAL", "ATTENTION", "DEGRADING", "WARNING"];
+    <dialog id="architecture-modal" class="modal">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">SYSTEM ARCHITECTURE</p>
+          <h2>Bounded read-only Agent</h2>
+        </div>
+        <button class="icon-button" type="button" data-close-modal aria-label="Architecture 닫기">×</button>
+      </div>
+      <div class="architecture-flow" aria-label="시스템 처리 구조">
+        <div class="architecture-node primary-node">LangGraph Tool-Calling Agent</div>
+        <span>observes ToolMessage</span>
+        <div class="architecture-branches">
+          <div><b>MCP Sensor Tools</b><small>MCP stdio → Repository → TimescaleDB</small></div>
+          <div><b>RAG Search</b><small>LangChain → ChromaDB</small></div>
+          <div><b>Conditional Web</b><small>Explicit request → Tavily</small></div>
+        </div>
+        <span>grounded context</span>
+        <div class="architecture-node">Gemini Final Answer</div>
+      </div>
+      <div class="stack-grid">
+        <div><span>AI</span><b>Gemini · LangGraph · LangChain</b></div>
+        <div><span>Tools</span><b>MCP · Tavily</b></div>
+        <div><span>Data</span><b>TimescaleDB · PostgreSQL · ChromaDB</b></div>
+        <div><span>Backend</span><b>Python · Flask</b></div>
+      </div>
+    </dialog>
 
-      function score(value) {
-        return Number(value).toFixed(2);
-      }
+    <dialog id="raw-response-modal" class="modal raw-modal">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">DEVELOPER VIEW</p>
+          <h2>Agent API response</h2>
+        </div>
+        <button class="icon-button" type="button" data-close-modal aria-label="Raw response 닫기">×</button>
+      </div>
+      <pre id="raw-response"></pre>
+    </dialog>
 
-      async function loadDashboard() {
-        const button = document.querySelector("#refresh");
-        button.disabled = true;
-        try {
-          const [factoryResponse, sensorsResponse] = await Promise.all([
-            fetch("/api/factory-summary"),
-            fetch("/api/sensors"),
-          ]);
-          if (!factoryResponse.ok || !sensorsResponse.ok) {
-            throw new Error("API 응답 오류");
-          }
-          const factory = await factoryResponse.json();
-          const sensors = await sensorsResponse.json();
-          document.querySelector("#as-of").textContent = `기준 시각 ${factory.as_of} · 모델 ${factory.model_run_id}`;
-          document.querySelector("#summary").innerHTML = statusOrder.map((name) => {
-            const count = factory[`${name.toLowerCase()}_count`];
-            return `<article class="card ${name.toLowerCase()}"><span>${name}</span><strong>${count}</strong></article>`;
-          }).join("");
-          document.querySelector("#sensor-rows").innerHTML = sensors.sensors.map((sensor) => `
-            <tr>
-              <td><a href="/api/sensors/${sensor.sensor_id}/status">${sensor.sensor_id}</a></td>
-              <td>${sensor.unit}</td>
-              <td><span class="badge ${sensor.latest_status.toLowerCase()}">${sensor.latest_status}</span></td>
-              <td>${score(sensor.latest_risk_score)}</td>
-              <td>${sensor.latest_window}</td>
-            </tr>
-          `).join("");
-        } catch (error) {
-          document.querySelector("#as-of").textContent = `조회 실패: ${error.message}`;
-        } finally {
-          button.disabled = false;
-        }
-      }
-
-      document.querySelector("#refresh").addEventListener("click", loadDashboard);
-      document.querySelector("#ask-form").addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const answer = document.querySelector("#answer");
-        const question = document.querySelector("#question").value;
-        answer.textContent = "조회 중...";
-        try {
-          const response = await fetch("/api/ask", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({question}),
-          });
-          const payload = await response.json();
-          if (!response.ok) throw new Error(payload.message || "질의 실패");
-          const sources = payload.citations.map((item) => item.source).filter(Boolean).join(", ");
-          const web = payload.web_search_used ? ` · 웹 검색 ${payload.web_result_count}건` : "";
-          const sensorSource = payload.sensor_data_source ? ` · 센서 조회: ${payload.sensor_data_source}` : "";
-          answer.textContent = `${payload.answer}\n\n경로: ${payload.route} · Router: ${payload.router_mode} · 생성: ${payload.generation_mode}${sensorSource}${web}\n분기 근거: ${payload.router_reason || "-"}\n출처: ${sources || "센서 DB"}`;
-        } catch (error) {
-          answer.textContent = `질의 실패: ${error.message}`;
-        }
-      });
-      loadDashboard();
-    </script>
+    <script type="module" src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
   </body>
 </html>

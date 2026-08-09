@@ -1,5 +1,7 @@
 # Part 2 — 비지도 이상탐지
 
+[문서 홈](../README.md) · 이전: [Part 1](../part1/README.md) · 다음: [Part 3](../part3/README.md)
+
 Part 1에서 TimescaleDB에 적재한 센서 `92`, `109`, `84`의 1분 Feature로 통계 Baseline과 Isolation Forest를 비교한다.
 
 > 구현 및 실행 완료: `iforest_2019_02_2019_07_v1`, 387,741개 Window DB 적재 완료
@@ -33,3 +35,13 @@ sensor_feature_1min
 - [x] Validation 분포로 Risk Score와 상태 임계값을 고정한다.
 - [x] Test 상위 이상 구간을 시각적으로 검토한다.
 - [x] 모델 실행 정보와 이상 결과를 TimescaleDB에 저장한다.
+
+## 관련 코드
+
+- `scripts/train_anomaly_models.py`: 센서별 Isolation Forest 학습
+- `scripts/score_anomalies.py`: 3-Sigma·Isolation Forest score와 상태 계산
+- `scripts/evaluate_anomalies.py`: 비교 지표와 그래프 생성
+- `scripts/load_anomaly_results.py`: model metadata와 결과 적재
+- `sql/003_anomaly_schema.sql`: anomaly table과 index
+
+학습된 `joblib`은 `models/`, 중간 Parquet은 `data/processed/`에 생성되며 Git에서 제외한다. 공개용 요약과 이미지는 이 문서 아래 `results/`, `images/`에 보관한다.

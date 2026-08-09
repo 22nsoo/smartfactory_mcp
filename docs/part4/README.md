@@ -1,6 +1,10 @@
 # Part 4 — RAG + LangChain + LangGraph + ChromaDB
 
+[문서 홈](../README.md) · 이전: [Part 3](../part3/README.md) · 다음: [Part 5](../part5/README.md)
+
 센서 `92`, `109`, `84`의 상태를 MCP Tool로 조회하고 점검 문서를 결합해 Gemini로 답변하는 자연어 질의 MVP다. 명시적인 외부 검색 요청에는 Tavily를 추가로 사용한다.
+
+> Part 4는 고정 `sensor / knowledge / hybrid` Router의 기준선이다. 현재 기본 Dashboard는 Part 5 Tool-Calling Agent를 사용하며, 이 코드는 비교와 회귀 테스트를 위해 유지한다.
 
 ## 구현 상태
 

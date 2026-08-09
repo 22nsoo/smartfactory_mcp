@@ -1,6 +1,10 @@
 # Part 3 — TimescaleDB 결과를 Flask API와 MCP Tool로 제공하기
 
+[문서 홈](../README.md) · 이전: [Part 2](../part2/README.md) · 다음: [Part 4](../part4/README.md)
+
 Part 2에서 저장한 센서 `92`, `109`, `84`의 이상탐지 결과를 Flask 대시보드·REST API와 읽기 전용 MCP Tool로 제공한다.
+
+> 이 문서는 Part 3 구현 시점의 구조를 기록한다. 현재 Part 5 Dashboard의 센서 API는 MCP 경계를 일관되게 유지하도록 `Flask → SensorMCPClient → MCP Server → Repository` 경로를 사용한다.
 
 ## 구현 범위
 
@@ -59,3 +63,5 @@ Tool                 7개
 Flask API 테스트      통과
 stdio 종단 간 테스트  통과
 ```
+
+현재 Tool-Calling Agent와 Dashboard는 [Part 5 문서](../part5/README.md)를 참고한다.

@@ -2,6 +2,8 @@
 .venv/
 venv/
 env/
+.direnv/
+.python-version
 
 # Python bytecode and caches
 __pycache__/
@@ -10,14 +12,26 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.hypothesis/
+.tox/
+.nox/
+.cache/
 .coverage
 .coverage.*
+coverage.xml
 htmlcov/
 
 # Local secrets and environment variables
 .env
 .env.*
 !.env.example
+.envrc
+.secrets/
+secrets/
+*.pem
+*.key
+credentials*.json
+service-account*.json
 
 # Raw datasets and large archives
 /SCADA/
@@ -26,6 +40,7 @@ htmlcov/
 /*.rar
 /*.tar
 /*.tar.gz
+*.parquet
 
 # Generated EDA artifacts
 /eda_output/
@@ -36,7 +51,12 @@ htmlcov/
 /data/processed/
 /data/vector_db/
 /backups/
-/models/
+/models/*
+!/models/README.md
+*.joblib
+*.sqlite
+*.sqlite3
+*.db
 *.dump
 
 # Build and package artifacts
@@ -57,7 +77,15 @@ dist/
 # IDE settings
 .vscode/
 .idea/
+.fleet/
+
+# Local AI coding-agent state and task specifications
+.agents/
+.codex/
+/CODEX_*_INSTRUCTIONS.md
 
 # macOS
 .DS_Store
 ._*
+Thumbs.db
+Desktop.ini

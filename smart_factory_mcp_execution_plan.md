@@ -7,6 +7,7 @@ Part 1  6개월 EDA + TimescaleDB 적재             완료
 Part 2  3-Sigma + Isolation Forest + Risk Score  완료
 Part 3  Flask API + MCP 조회 Tool                완료
 Part 4  RAG + LangChain + LangGraph + ChromaDB   오프라인 MVP 완료
+Part 5  LangGraph Tool-Calling AI Agent           로컬 검증 완료
 ```
 
 Part 2 결과는 센서 `92`, `109`, `84`의 387,741개 1분 Window를 대상으로 생성했으며, `anomaly_result`에 전량 적재했다. 상세 결과와 재현 명령은 `docs/part2/`에 기록한다.
@@ -14,6 +15,8 @@ Part 2 결과는 센서 `92`, `109`, `84`의 387,741개 1분 Window를 대상으
 Part 3에서는 이 결과를 조회하는 Flask 대시보드·REST API와 읽기 전용 MCP 2.0 Tool 7개를 구현했다. Flask HTTP 테스트와 MCP stdio Client 종단 간 테스트를 완료했으며 상세 실행 방법은 `docs/part3/`에 기록한다.
 
 Part 4에서는 프로젝트용 일반 점검 문서 4개를 20개 Chunk로 나눠 ChromaDB에 저장하고, LangChain Retriever와 LangGraph의 `sensor`, `knowledge`, `hybrid` 경로를 구현했다. Flask `/api/ask`까지 연결했으며 외부 LLM 대신 결정론적 오프라인 Template으로 답변한다.
+
+Part 5에서는 Part 4를 기준선으로 보존하면서, Gemini가 MCP Tool 7개와 로컬 지식 검색 Tool, 명시적으로 허용된 Web Tool 중 필요한 기능을 선택하고 실행 결과를 다시 관찰하는 Agent Loop를 추가했다. 최대 8단계, read-only MCP 경계, 오류 정규화, citation과 Tool trace, deterministic fallback을 유지한다. Flask Dashboard에서는 sensor card, 상세 Feature, historical SVG chart, MCP/RAG/Web 실행 trace와 근거 문서를 한 화면에 제공한다.
 
 ## 1. 프로젝트 개요
 

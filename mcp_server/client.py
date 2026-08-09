@@ -66,18 +66,48 @@ class SensorMCPClient:
     ) -> dict[str, dict[str, Any]]:
         parameters = self._server_parameters()
         responses: dict[str, dict[str, Any]] = {}
+        failure: MCPToolError | None = None
         async with stdio_client(parameters) as (read_stream, write_stream):
             async with ClientSession(read_stream, write_stream) as session:
                 await session.initialize()
                 for name, arguments in calls:
                     result = await session.call_tool(name, arguments)
                     if result.is_error:
-                        raise MCPToolError(f"MCP tool failed: {name}")
+                        failure = MCPToolError(f"MCP tool failed: {name}")
+                        break
                     payload = result.structured_content
                     if not isinstance(payload, dict):
-                        raise MCPToolError(f"MCP tool returned no structured content: {name}")
+                        failure = MCPToolError(
+                            f"MCP tool returned no structured content: {name}"
+                        )
+                        break
                     responses[name] = payload
+        if failure is not None:
+            raise failure
         return responses
+
+    async def _inspect_server(self) -> dict[str, Any]:
+        parameters = self._server_parameters()
+        async with stdio_client(parameters) as (read_stream, write_stream):
+            async with ClientSession(read_stream, write_stream) as session:
+                await session.initialize()
+                result = await session.list_tools()
+                tools = [
+                    {
+                        "name": item.name,
+                        "description": item.description or "",
+                    }
+                    for item in result.tools
+                ]
+        return {
+            "available": True,
+            "transport": "stdio",
+            "server": "smart-factory-scada",
+            "mode": "read-only",
+            "database": "TimescaleDB / PostgreSQL",
+            "tool_count": len(tools),
+            "tools": tools,
+        }
 
     def call_tools(
         self, calls: Sequence[tuple[str, dict[str, Any]]]
@@ -86,6 +116,18 @@ class SensorMCPClient:
 
     def call_tool(self, name: str, arguments: dict[str, Any] | None = None) -> dict[str, Any]:
         return self.call_tools([(name, arguments or {})])[name]
+
+    def inspect_server(self) -> dict[str, Any]:
+        return _run_async(self._inspect_server())
+
+    def get_dashboard_overview(self) -> dict[str, Any]:
+        responses = self.call_tools(
+            [("list_monitored_sensors", {}), ("get_factory_summary", {})]
+        )
+        return {
+            "factory_summary": responses["get_factory_summary"],
+            "sensors": responses["list_monitored_sensors"]["sensors"],
+        }
 
     def get_sensor_status(self, sensor_id: str) -> dict[str, Any]:
         return self.call_tool("get_sensor_status", {"sensor_id": sensor_id})

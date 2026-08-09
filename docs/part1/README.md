@@ -1,5 +1,7 @@
 # Part 1 — EDA와 TimescaleDB
 
+[문서 홈](../README.md) · [프로젝트 홈](../../README.md) · 다음: [Part 2](../part2/README.md)
+
 31GB SCADA 데이터에서 6개월 구간을 선정해 EDA를 수행하고, 센서 `92`, `109`, `84`의 원시값과 1분 Feature를 TimescaleDB에 적재한 기록이다.
 
 ## 문서
@@ -19,3 +21,11 @@
 - `data/processed/`: 선정 센서 Parquet
 - Docker `timescale_data` 볼륨: TimescaleDB 데이터
 - `backups/smart_factory.dump`: DB 백업
+
+## 관련 코드
+
+- `eda.py`: 대용량 CSV EDA
+- `scripts/prepare_selected_data.py`: 선택 센서 Parquet 생성
+- `scripts/build_features.py`: 1분 Feature 생성
+- `scripts/load_timescaledb.py`: EDA·원시값·Feature 적재
+- `sql/001_extensions.sql`, `sql/002_schema.sql`: TimescaleDB schema
