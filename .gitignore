@@ -1,0 +1,61 @@
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Local secrets and environment variables
+.env
+.env.*
+!.env.example
+
+# Raw datasets and large archives
+/SCADA/
+/*.7z
+/*.zip
+/*.rar
+/*.tar
+/*.tar.gz
+
+# Generated EDA artifacts
+/eda_output/
+/eda_output_*/
+/.matplotlib_cache/
+
+# Processed datasets and database backups
+/data/processed/
+/backups/
+*.dump
+
+# Build and package artifacts
+build/
+dist/
+*.egg-info/
+
+# Jupyter temporary files
+.ipynb_checkpoints/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# IDE settings
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+._*

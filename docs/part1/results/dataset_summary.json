@@ -1,0 +1,14 @@
+{
+  "data_directory": "/Users/insu/Desktop/smartfactory_mcp/SCADA",
+  "start_month": "2019_02",
+  "end_month": "2019_07",
+  "csv_file_count": 180,
+  "header_only_file_count": 23,
+  "csv_size_bytes": 7179295705,
+  "total_rows": 184664873,
+  "sensor_count": 149,
+  "start_timestamp": "2019-01-31 00:00:00.143000",
+  "end_timestamp": "2019-07-30 20:43:10.127000",
+  "failed_file_count": 0,
+  "limited_run": false
+}

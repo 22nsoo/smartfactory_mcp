@@ -1,0 +1,23 @@
+services:
+  timescaledb:
+    image: timescale/timescaledb:2.29.0-pg18
+    container_name: smart_factory_timescaledb
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      TIMESCALEDB_TELEMETRY: "off"
+      TS_TUNE_MEMORY: "2GB"
+      TS_TUNE_NUM_CPUS: "2"
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - timescale_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  timescale_data:
