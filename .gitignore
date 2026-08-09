@@ -34,7 +34,9 @@ htmlcov/
 
 # Processed datasets and database backups
 /data/processed/
+/data/vector_db/
 /backups/
+/models/
 *.dump
 
 # Build and package artifacts

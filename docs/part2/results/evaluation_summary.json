@@ -1,0 +1,11 @@
+{
+  "model_run_id": "iforest_2019_02_2019_07_v1",
+  "total_rows": 387741,
+  "test_rows": 77549,
+  "sensor_count": 3,
+  "test_sigma_anomaly_count": 5134,
+  "test_isolation_anomaly_count": 5852,
+  "test_both_anomaly_count": 3516,
+  "results_directory": "docs/part2/results",
+  "images_directory": "docs/part2/images"
+}

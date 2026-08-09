@@ -1,0 +1,2 @@
+-r requirements-mcp.txt
+Flask==3.1.3

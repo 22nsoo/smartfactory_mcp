@@ -1,5 +1,20 @@
 # 스마트 팩토리 SCADA 이상탐지 + MCP + RAG 시스템 실행 방안
 
+## 현재 구현 상태 — 2026-08-09
+
+```text
+Part 1  6개월 EDA + TimescaleDB 적재             완료
+Part 2  3-Sigma + Isolation Forest + Risk Score  완료
+Part 3  Flask API + MCP 조회 Tool                완료
+Part 4  RAG + LangChain + LangGraph + ChromaDB   오프라인 MVP 완료
+```
+
+Part 2 결과는 센서 `92`, `109`, `84`의 387,741개 1분 Window를 대상으로 생성했으며, `anomaly_result`에 전량 적재했다. 상세 결과와 재현 명령은 `docs/part2/`에 기록한다.
+
+Part 3에서는 이 결과를 조회하는 Flask 대시보드·REST API와 읽기 전용 MCP 2.0 Tool 7개를 구현했다. Flask HTTP 테스트와 MCP stdio Client 종단 간 테스트를 완료했으며 상세 실행 방법은 `docs/part3/`에 기록한다.
+
+Part 4에서는 프로젝트용 일반 점검 문서 4개를 20개 Chunk로 나눠 ChromaDB에 저장하고, LangChain Retriever와 LangGraph의 `sensor`, `knowledge`, `hybrid` 경로를 구현했다. Flask `/api/ask`까지 연결했으며 외부 LLM 대신 결정론적 오프라인 Template으로 답변한다.
+
 ## 1. 프로젝트 개요
 
 ### 1.1 프로젝트 목표
@@ -37,7 +52,7 @@
   - `timestamp`: 측정 시간
 - 메타데이터 기준 센서 수: 147개
 
-실제 CSV에는 `0,445`, `117.383`, `3.796.795`처럼 숫자 표기가 혼재하고 일부 파일에는 불필요한 빈 컬럼이 존재한다. 따라서 일반적인 단일 `read_csv()` 호출이 아니라 파일별 구분자 감지와 값 정규화가 필요하다. 실제 센서 수와 유효 데이터 수는 전체 EDA 완료 후 최종 확정한다.
+실제 CSV에는 `0,445`, `117.383`, `3.796.795`처럼 숫자 표기가 혼재하고 일부 파일에는 불필요한 빈 컬럼이 존재한다. 따라서 일반적인 단일 `read_csv()` 호출이 아니라 파일별 구분자 감지와 값 정규화가 필요하다. 선택한 6개월 EDA에서는 실제 센서 149개와 184,664,873행을 확인했다.
 
 ### 2.2 센서 종류
 
@@ -266,15 +281,12 @@ TimescaleDB 적용 후 시계열 테이블로 구성한다.
 ### 이상탐지 결과 테이블
 
 ```sql
-CREATE TABLE anomaly_result (
-    timestamp TIMESTAMPTZ NOT NULL,
-    sensor_id INTEGER NOT NULL,
-    anomaly_score DOUBLE PRECISION,
-    status VARCHAR(20),
-    model_name VARCHAR(50),
-    model_version VARCHAR(20)
-);
+anomaly_model_run     -- 전체 실행 파라미터와 버전
+anomaly_model_sensor  -- 센서별 Split, 3-Sigma, Validation 임계값
+anomaly_result        -- Window별 점수, Risk Score, 상태
 ```
+
+실제 DDL은 `sql/003_anomaly_schema.sql`에 관리한다.
 
 ### 센서 통계 테이블
 
@@ -352,7 +364,7 @@ Window 크기를 임의로 정하지 않고 실제 센서 수집 주기를 기�
 
 ## 9.1 Baseline
 
-먼저 통계 기반 이상탐지를 구현한다.
+Train 60% 구간으로 통계 기반 이상탐지를 구현했다.
 
 ```text
 Lower = Mean - 3 × STD
@@ -391,22 +403,24 @@ Anomaly Score:
 연속적인 이상 정도
 ```
 
-### 초기 구현 예
+### 실제 구현
 
 ```python
 from sklearn.ensemble import IsolationForest
 
 model = IsolationForest(
-    n_estimators=200,
-    contamination=0.01,
-    random_state=42
+    n_estimators=300,
+    contamination="auto",
+    random_state=42,
+    n_jobs=-1,
 )
 
 model.fit(X_train)
 
-prediction = model.predict(X)
-score = model.decision_function(X)
+severity = -model.decision_function(X)
 ```
+
+센서별 시간 순서로 Train/Validation/Test를 60/20/20 분리했다. Validation severity의 경험적 백분위수를 0~100 Risk Score로 변환하고 95점 이상을 WARNING으로 기록한다. Test에서는 77,549개 Window 중 Isolation Forest 이상 5,852개, 3-Sigma 이상 5,134개, 공통 이상 3,516개가 확인됐다.
 
 ---
 

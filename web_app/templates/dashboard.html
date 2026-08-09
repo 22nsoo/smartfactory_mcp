@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Smart Factory SCADA Monitor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+  </head>
+  <body>
+    <main class="layout">
+      <header>
+        <p class="eyebrow">SMART FACTORY · HISTORICAL SCADA</p>
+        <h1>센서 이상 상태 모니터</h1>
+        <p id="as-of" class="subtitle">데이터를 불러오는 중입니다.</p>
+      </header>
+
+      <section id="summary" class="summary" aria-label="상태 요약"></section>
+
+      <section class="panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">MONITORED SENSORS</p>
+            <h2>마지막 저장 상태</h2>
+          </div>
+          <button id="refresh" type="button">새로고침</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>센서</th>
+                <th>단위</th>
+                <th>상태</th>
+                <th>Risk Score</th>
+                <th>마지막 Window</th>
+              </tr>
+            </thead>
+            <tbody id="sensor-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel ask-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">PART 4 · RAG + LANGGRAPH</p>
+            <h2>센서와 점검 지식 질문</h2>
+          </div>
+        </div>
+        <form id="ask-form">
+          <label for="question">질문</label>
+          <div class="ask-row">
+            <input id="question" name="question" value="센서 92 상태와 점검 방법을 알려줘" maxlength="1000">
+            <button type="submit">질문하기</button>
+          </div>
+        </form>
+        <pre id="answer" class="answer">질문을 입력하면 TimescaleDB 상태와 Vector DB 점검 문서를 함께 조회합니다.</pre>
+      </section>
+
+      <p class="notice">이 화면은 실시간 공장 상태가 아니라 2019년 공개 데이터셋의 마지막 기록을 보여줍니다.</p>
+    </main>
+
+    <script>
+      const statusOrder = ["NORMAL", "ATTENTION", "DEGRADING", "WARNING"];
+
+      function score(value) {
+        return Number(value).toFixed(2);
+      }
+
+      async function loadDashboard() {
+        const button = document.querySelector("#refresh");
+        button.disabled = true;
+        try {
+          const [factoryResponse, sensorsResponse] = await Promise.all([
+            fetch("/api/factory-summary"),
+            fetch("/api/sensors"),
+          ]);
+          if (!factoryResponse.ok || !sensorsResponse.ok) {
+            throw new Error("API 응답 오류");
+          }
+          const factory = await factoryResponse.json();
+          const sensors = await sensorsResponse.json();
+          document.querySelector("#as-of").textContent = `기준 시각 ${factory.as_of} · 모델 ${factory.model_run_id}`;
+          document.querySelector("#summary").innerHTML = statusOrder.map((name) => {
+            const count = factory[`${name.toLowerCase()}_count`];
+            return `<article class="card ${name.toLowerCase()}"><span>${name}</span><strong>${count}</strong></article>`;
+          }).join("");
+          document.querySelector("#sensor-rows").innerHTML = sensors.sensors.map((sensor) => `
+            <tr>
+              <td><a href="/api/sensors/${sensor.sensor_id}/status">${sensor.sensor_id}</a></td>
+              <td>${sensor.unit}</td>
+              <td><span class="badge ${sensor.latest_status.toLowerCase()}">${sensor.latest_status}</span></td>
+              <td>${score(sensor.latest_risk_score)}</td>
+              <td>${sensor.latest_window}</td>
+            </tr>
+          `).join("");
+        } catch (error) {
+          document.querySelector("#as-of").textContent = `조회 실패: ${error.message}`;
+        } finally {
+          button.disabled = false;
+        }
+      }
+
+      document.querySelector("#refresh").addEventListener("click", loadDashboard);
+      document.querySelector("#ask-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const answer = document.querySelector("#answer");
+        const question = document.querySelector("#question").value;
+        answer.textContent = "조회 중...";
+        try {
+          const response = await fetch("/api/ask", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({question}),
+          });
+          const payload = await response.json();
+          if (!response.ok) throw new Error(payload.message || "질의 실패");
+          const sources = payload.citations.map((item) => item.source).filter(Boolean).join(", ");
+          const web = payload.web_search_used ? ` · 웹 검색 ${payload.web_result_count}건` : "";
+          const sensorSource = payload.sensor_data_source ? ` · 센서 조회: ${payload.sensor_data_source}` : "";
+          answer.textContent = `${payload.answer}\n\n경로: ${payload.route} · Router: ${payload.router_mode} · 생성: ${payload.generation_mode}${sensorSource}${web}\n분기 근거: ${payload.router_reason || "-"}\n출처: ${sources || "센서 DB"}`;
+        } catch (error) {
+          answer.textContent = `질의 실패: ${error.message}`;
+        }
+      });
+      loadDashboard();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "collection": "smart_factory_maintenance",
+  "document_count": 20,
+  "source_count": 4,
+  "sources": [
+    "data_quality_checks.md",
+    "risk_score_interpretation.md",
+    "vibration_triage.md",
+    "welding_line_inspection.md"
+  ],
+  "persist_directory": "/Users/insu/Desktop/smartfactory_mcp/data/vector_db",
+  "embedding": "HashingVectorizer char_wb 2-5 grams, 768 dimensions"
+}

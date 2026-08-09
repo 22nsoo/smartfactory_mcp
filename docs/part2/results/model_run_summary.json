@@ -1,0 +1,227 @@
+{
+  "model_run_id": "iforest_2019_02_2019_07_v1",
+  "source_run_id": "eda_2019_02_2019_07_v1",
+  "source_input": "data/processed/sensor_features_1min.parquet",
+  "source_row_count": 387741,
+  "sensor_ids": [
+    "92",
+    "109",
+    "84"
+  ],
+  "feature_names": [
+    "mean",
+    "std",
+    "min_value",
+    "max_value",
+    "rms",
+    "peak_to_peak",
+    "slope"
+  ],
+  "sample_count_policy": "quality filter only; minimum 30 in source feature data",
+  "train_ratio": 0.6,
+  "validation_ratio": 0.2,
+  "test_ratio": 0.2,
+  "model_name": "IsolationForest",
+  "model_parameters": {
+    "n_estimators": 300,
+    "contamination": "auto",
+    "random_state": 42,
+    "n_jobs": -1
+  },
+  "status_thresholds": {
+    "normal_max_exclusive": 60.0,
+    "attention_max_exclusive": 80.0,
+    "degrading_max_exclusive": 95.0,
+    "warning_min_inclusive": 95.0,
+    "strong_anomaly_percentile": 99.0
+  },
+  "sklearn_version": "1.9.0",
+  "sensors": [
+    {
+      "sensor_id": "92",
+      "row_count": 131275,
+      "train_rows": 78765,
+      "validation_rows": 26255,
+      "test_rows": 26255,
+      "train_start": "2019-01-31 00:00:00",
+      "train_end": "2019-05-20 23:47:00",
+      "validation_start": "2019-05-20 23:48:00",
+      "validation_end": "2019-06-25 14:30:00",
+      "test_start": "2019-06-25 14:31:00",
+      "test_end": "2019-07-30 20:42:00",
+      "sigma_profile": {
+        "mean": {
+          "mean": 380.8078385488445,
+          "std": 193.12049579448663,
+          "lower": -198.55364883461544,
+          "upper": 960.1693259323044
+        },
+        "std": {
+          "mean": 410.20753750007987,
+          "std": 222.75478252146456,
+          "lower": -258.0568100643138,
+          "upper": 1078.4718850644736
+        },
+        "min_value": {
+          "mean": 29.42804146511775,
+          "std": 6.238178266162624,
+          "lower": 10.713506666629879,
+          "upper": 48.14257626360562
+        },
+        "max_value": {
+          "mean": 2074.2016978353327,
+          "std": 1191.862841688412,
+          "lower": -1501.3868272299028,
+          "upper": 5649.790222900569
+        },
+        "rms": {
+          "mean": 563.5166759580558,
+          "std": 287.4874061092053,
+          "lower": -298.94554236956026,
+          "upper": 1425.9788942856717
+        },
+        "peak_to_peak": {
+          "mean": 2044.7736563702151,
+          "std": 1189.8642949689715,
+          "lower": -1524.8192285366995,
+          "upper": 5614.36654127713
+        },
+        "slope": {
+          "mean": -0.03222801210096328,
+          "std": 5.9273084466323605,
+          "lower": -17.814153351998044,
+          "upper": 17.74969732779612
+        }
+      },
+      "validation_severity_p95": 0.05748360766102009,
+      "validation_severity_p99": 0.101814366696706,
+      "training_data_hash": "fb36efe2a87d321c7aae5cd1b6dc85c05af859a092e491b7b6d38b8a82f5732b",
+      "model_path": "models/iforest_2019_02_2019_07_v1/sensor_92.joblib",
+      "model_size_bytes": 1095754
+    },
+    {
+      "sensor_id": "109",
+      "row_count": 131260,
+      "train_rows": 78756,
+      "validation_rows": 26252,
+      "test_rows": 26252,
+      "train_start": "2019-01-31 00:00:00",
+      "train_end": "2019-05-20 23:59:00",
+      "validation_start": "2019-05-21 00:00:00",
+      "validation_end": "2019-06-25 14:43:00",
+      "test_start": "2019-06-25 14:45:00",
+      "test_end": "2019-07-30 20:42:00",
+      "sigma_profile": {
+        "mean": {
+          "mean": 178.36645205595514,
+          "std": 79.79847888761124,
+          "lower": -61.028984606878595,
+          "upper": 417.7618887187889
+        },
+        "std": {
+          "mean": 144.42242584324578,
+          "std": 75.16120684320923,
+          "lower": -81.0611946863819,
+          "upper": 369.90604637287345
+        },
+        "min_value": {
+          "mean": 29.422467735791557,
+          "std": 5.904323770558282,
+          "lower": 11.709496424116711,
+          "upper": 47.135439047466406
+        },
+        "max_value": {
+          "mean": 866.5736889760781,
+          "std": 502.66663692792787,
+          "lower": -641.4262218077056,
+          "upper": 2374.5735997598617
+        },
+        "rms": {
+          "mean": 231.184446329376,
+          "std": 106.03388292315475,
+          "lower": -86.91720244008826,
+          "upper": 549.2860950988402
+        },
+        "peak_to_peak": {
+          "mean": 837.1512212402864,
+          "std": 500.64324966455996,
+          "lower": -664.7785277533934,
+          "upper": 2339.080970233966
+        },
+        "slope": {
+          "mean": -0.01721852443541979,
+          "std": 1.9189871763663706,
+          "lower": -5.774180053534532,
+          "upper": 5.7397430046636915
+        }
+      },
+      "validation_severity_p95": 0.10704104954473037,
+      "validation_severity_p99": 0.15875529030975394,
+      "training_data_hash": "8f0b066830871a47b6608023b8f1d853e454ac97ab9ecacd9c1130af0dc800ba",
+      "model_path": "models/iforest_2019_02_2019_07_v1/sensor_109.joblib",
+      "model_size_bytes": 1101783
+    },
+    {
+      "sensor_id": "84",
+      "row_count": 125206,
+      "train_rows": 75123,
+      "validation_rows": 25041,
+      "test_rows": 25042,
+      "train_start": "2019-01-31 00:00:00",
+      "train_end": "2019-05-21 20:03:00",
+      "validation_start": "2019-05-21 20:04:00",
+      "validation_end": "2019-06-26 13:42:00",
+      "test_start": "2019-06-26 13:43:00",
+      "test_end": "2019-07-30 20:42:00",
+      "sigma_profile": {
+        "mean": {
+          "mean": 288.32628396536796,
+          "std": 126.46521532545636,
+          "lower": -91.06936201100109,
+          "upper": 667.721929941737
+        },
+        "std": {
+          "mean": 291.27262641353286,
+          "std": 161.69923052867026,
+          "lower": -193.82506517247793,
+          "upper": 776.3703179995437
+        },
+        "min_value": {
+          "mean": 29.21522710754363,
+          "std": 4.88122141626734,
+          "lower": 14.571562858741611,
+          "upper": 43.85889135634565
+        },
+        "max_value": {
+          "mean": 1935.3762615310889,
+          "std": 1450.0218098521493,
+          "lower": -2414.6891680253593,
+          "upper": 6285.441691087537
+        },
+        "rms": {
+          "mean": 414.9712583888859,
+          "std": 194.7067936029404,
+          "lower": -169.14912241993534,
+          "upper": 999.0916391977071
+        },
+        "peak_to_peak": {
+          "mean": 1906.1610344235453,
+          "std": 1449.133718316384,
+          "lower": -2441.2401205256065,
+          "upper": 6253.562189372697
+        },
+        "slope": {
+          "mean": 0.09135491723218603,
+          "std": 3.985390642993143,
+          "lower": -11.864817011747244,
+          "upper": 12.047526846211616
+        }
+      },
+      "validation_severity_p95": 0.13467326259927181,
+      "validation_severity_p99": 0.23114914885833385,
+      "training_data_hash": "467cfbd3b4766140ccd25206683459c7dd1a0c27c9e5693fc50c27c68f994981",
+      "model_path": "models/iforest_2019_02_2019_07_v1/sensor_84.joblib",
+      "model_size_bytes": 1074714
+    }
+  ]
+}
